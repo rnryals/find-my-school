@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이 스쿨 : 내 학교 찾기</title>
+  <!-- Pretendard 폰트 불러오기 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg-color: #FFFDF7;
+      --primary-color: #FFB300;
+      --primary-light: #FFE082;
+      --secondary-color: #80DEEA;
+      --text-color: #2D3748;
+      --card-bg: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* 모바일 앱 화면 형태 프레임 */
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      background-color: var(--bg-color);
+      position: relative;
+    }
+
+    header {
+      text-align: center;
+      padding: 15px 0 25px 0;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .main-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 15px;
+      border: 1px solid #E2E8F0;
+      background-color: var(--card-bg);
+      font-size: 0.95rem;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A0AEC0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 16px;
+    }
+
+    /* 단일 선택 세그먼트 버튼 (공학 여부) */
+    .radio-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .radio-btn {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      border-radius: 15px;
+      border: 2px solid #E2E8F0;
+      background-color: var(--card-bg);
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .radio-btn.active {
+      background-color: var(--primary-light);
+      border-color: var(--primary-color);
+      font-weight: 700;
+    }
+
+    /* Multi-select 칩 버튼 (과목 선택) */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      background-color: var(--card-bg);
+      border: 1px solid #E2E8F0;
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .chip.active {
+      background-color: var(--secondary-color);
+      border-color: #4DD0E1;
+      font-weight: 700;
+    }
+
+    /* Submit 버튼 */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 18px;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 179, 0, 0.3);
+      margin-top: 10px;
+      transition: transform 0.1s ease;
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* 화면 전환 제어 */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* 결과 카드 스타일 */
+    .school-card {
+      background-color: var(--card-bg);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .school-name {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .tag {
+      background-color: #FFF3C4;
+      color: #E65100;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 10px;
+    }
+
+    .distance {
+      font-size: 0.85rem;
+      color: #718096;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .divider {
+      height: 1px;
+      background-color: #EDF2F7;
+      margin: 15px 0;
+    }
+
+    .detail-item {
+      margin-bottom: 12px;
+    }
+
+    .detail-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .detail-content {
+      font-size: 0.85rem;
+      color: #4A5568;
+      line-height: 1.4;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      color: #718096;
+      cursor: pointer;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <h1>🎒 마이 스쿨 : 내 학교 찾기</h1>
+    </header>
+
+    <!-- 1. 정보 입력 화면 -->
+    <div id="inputScreen" class="screen active">
+      <div class="main-title">
+        나에게 꼭 맞는 고등학교를<br>찾아볼까요? ✨
+      </div>
+
+      <div class="form-group">
+        <label>📍 내가 살고 있는 지역</label>
+        <select id="regionSelect">
+          <option value="강남구">강남구</option>
+          <option value="서초구">서초구</option>
+          <option value="송파구">송파구</option>
+          <option value="노원구">노원구</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>📊 나의 현재 성적대</label>
+        <select id="gradeSelect">
+          <option value="상위권 (10~20%)">상위권 (10~20%)</option>
+          <option value="최상위권 (10% 이내)">최상위권 (10% 이내)</option>
+          <option value="중위권 (20~50%)">중위권 (20~50%)</option>
+          <option value="하위권 (50% 이하)">하위권 (50% 이하)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>🏫 선호하는 학교 유형</label>
+        <div class="radio-group">
+          <div class="radio-btn active" onclick="selectRadio(this, '상관없음')">상관없음</div>
+          <div class="radio-btn" onclick="selectRadio(this, '남녀공학')">남녀공학</div>
+          <div class="radio-btn" onclick="selectRadio(this, '남고/여고')">남고/여고</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>📚 즐겨하거나 자신 있는 과목 (다중 선택)</label>
+        <div class="chip-group">
+          <div class="chip" onclick="toggleChip(this)">수학</div>
+          <div class="chip" onclick="toggleChip(this)">과학</div>
+          <div class="chip" onclick="toggleChip(this)">영어</div>
+          <div class="chip" onclick="toggleChip(this)">국어</div>
+          <div class="chip" onclick="toggleChip(this)">사회/역사</div>
+          <div class="chip" onclick="toggleChip(this)">예체능</div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="showResults()">나에게 맞는 맞춤 고등학교 보기 🚀</button>
+    </div>
+
+    <!-- 2. 추천 결과 화면 -->
+    <div id="resultScreen" class="screen">
+      <button class="back-btn" onclick="showInput()">← 다시 선택하기</button>
+      <div class="main-title">추천 고등학교 목록 🏫</div>
+      <div id="schoolList"></div>
+    </div>
+  </div>
+
+  <script>
+    let selectedCoed = '상관없음';
+
+    // 라디오 버튼 선택 제어
+    function selectRadio(element, value) {
+      document.querySelectorAll('.radio-btn').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      selectedCoed = value;
+    }
+
+    // 칩 버튼 다중 선택 제어
+    function toggleChip(element) {
+      element.classList.toggle('active');
+    }
+
+    // 결과 화면 전환 및 추천 알고리즘 처리
+    function showResults() {
+      const region = document.getElementById('regionSelect').value;
+      
+      // 예시 추천 고등학교 데이터
+      const mockSchools = [
+        {
+          name: "한빛고등학교",
+          tag: "이과 성향 추천",
+          distance: "버스 15분 (약 2.1km)",
+          reason: "수학/과학 중점 교육과정을 운영하여 선택 과목과 매우 잘 맞습니다.",
+          pros: "최신 시설의 독서실, 자율동아리 지원금이 많음.",
+          cons: "매점이 없고 자판기만 있음, 서술형 평가 난이도가 높은 편.",
+          examStyle: "수학은 사고력 위주의 변형 문제 출제 비율이 높고, 영어는 부교재 비중이 70% 이상으로 높음."
+        },
+        {
+          name: "꿈마을고등학교",
+          tag: "통학 최우선",
+          distance: "도보 10분 (약 800m)",
+          reason: `${region} 기준 통학 거리가 매우 가깝고, 내신 따기가 상대적으로 수월함.`,
+          pros: "통학이 매우 편리함, 선생님들이 친절하고 수행평가 부담이 적음.",
+          cons: "상위권 경쟁이 치열하여 1등급 컷이 매우 높음.",
+          examStyle: "교과서 중심의 정직한 출제 스타일. 실수 하나로 등급이 갈릴 수 있어 꼼꼼함이 필수."
+        },
+        {
+          name: "성현여자고등학교",
+          tag: "문과/수시 강추",
+          distance: "지하철+도보 25분 (약 3.8km)",
+          reason: "국어/영어 과목에 강점이 있는 학생들에게 체계적인 생기부 관리를 제공.",
+          pros: "면학 분위기가 매우 좋음, 문과 계열 수시 실적이 우수함.",
+          cons: "내신 경쟁이 매우 치열함, 등교 길 경사가 가파름.",
+          examStyle: "국어와 영어의 지문이 길고 지필고사 변별력이 매우 높음. 융합형 문제 자주 출제."
+        }
+      ];
+
+      const schoolListContainer = document.getElementById('schoolList');
+      schoolListContainer.innerHTML = '';
+
+      // 동적 카드 생성
+      mockSchools.forEach(school => {
+        const cardHtml = `
+          <div class="school-card">
+            <div class="card-header">
+              <span class="school-name">${school.name}</span>
+              <span class="tag">${school.tag}</span>
+            </div>
+            <div class="distance">🚌 통학 거리: ${school.distance}</div>
+            <div class="divider"></div>
+            <div class="detail-item">
+              <div class="detail-title">🎯 추천 이유</div>
+              <div class="detail-content">${school.reason}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-title">👍 장점</div>
+              <div class="detail-content">${school.pros}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-title">👎 단점</div>
+              <div class="detail-content">${school.cons}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-title">📝 내신 출제 스타일</div>
+              <div class="detail-content">${school.examStyle}</div>
+            </div>
+          </div>
+        `;
+        schoolListContainer.innerHTML += cardHtml;
+      });
+
+      document.getElementById('inputScreen').classList.remove('active');
+      document.getElementById('resultScreen').classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    // 다시 선택하기 화면 전환
+    function showInput() {
+      document.getElementById('resultScreen').classList.remove('active');
+      document.getElementById('inputScreen').classList.add('active');
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이 스쿨 : 내 학교 찾기</title>
+  <!-- Pretendard 폰트 불러오기 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg-color: #FFFDF7;
+      --primary-color: #FFB300;
+      --primary-light: #FFE082;
+      --secondary-color: #80DEEA;
+      --text-color: #2D3748;
+      --card-bg: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* 모바일 앱 화면 형태 프레임 */
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      background-color: var(--bg-color);
+      position: relative;
+    }
+
+    header {
+      text-align: center;
+      padding: 15px 0 25px 0;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .main-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 15px;
+      border: 1px solid #E2E8F0;
+      background-color: var(--card-bg);
+      font-size: 0.95rem;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A0AEC0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 16px;
+    }
+
+    /* 단일 선택 세그먼트 버튼 (공학 여부) */
+    .radio-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .radio-btn {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      border-radius: 15px;
+      border: 2px solid #E2E8F0;
+      background-color: var(--card-bg);
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .radio-btn.active {
+      background-color: var(--primary-light);
+      border-color: var(--primary-color);
+      font-weight: 700;
+    }
+
+    /* Multi-select 칩 버튼 (과목 선택) */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      background-color: var(--card-bg);
+      border: 1px solid #E2E8F0;
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .chip.active {
+      background-color: var(--secondary-color);
+      border-color: #4DD0E1;
+      font-weight: 700;
+    }
+
+    /* Submit 버튼 */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 18px;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 179, 0, 0.3);
+      margin-top: 10px;
+      transition: transform 0.1s ease;
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* 화면 전환 제어 */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* 결과 카드 스타일 */
+    .school-card {
+      background-color: var(--card-bg);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .school-name {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .tag {
+      background-color: #FFF3C4;
+      color: #E65100;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 10px;
+    }
+
+    .distance {
+      font-size: 0.85rem;
+      color: #718096;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .divider {
+      height: 1px;
+      background-color: #EDF2F7;
+      margin: 15px 0;
+    }
+
+    .detail-item {
+      margin-bottom: 12px;
+    }
+
+    .detail-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .detail-content {
+      font-size: 0.85rem;
+      color: #4A5568;
+      line-height: 1.4;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      color: #718096;
+      cursor: pointer;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <h1>🎒 마이 스쿨 : 내 학교 찾기</h1>
+    </header>
+
+    <!-- 1. 정보 입력 화면 -->
+    <div id="inputScreen" class="screen active">
+      <div class="main-title">
+        나에게 꼭 맞는 고등학교를<br>찾아볼까요? ✨
+      </div>
+
+      <div class="form-group">
+        <label>📍 내가 살고 있는 지역</label>
+        <select id="regionSelect">
+          <option value="강남구">강남구</option>
+          <option value="서초구">서초구</option>
+          <option value="송파구">송파구</option>
+          <option value="노원구">노원구</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>📊 나의 현재 성적대</label>
+        <select id="gradeSelect">
+          <option value="상위권 (10~20%)">상위권 (10~20%)</option>
+          <option value="최상위권 (10% 이내)">최상위권 (10% 이내)</option>
+          <option value="중위권 (20~50%)">중위권 (20~50%)</option>
+          <option value="하위권 (50% 이하)">하위권 (50% 이하)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>🏫 선호하는 학교 유형</label>
+        <div class="radio-group">
+          <div class="radio-btn active" onclick="selectRadio(this, '상관없음')">상관없음</div>
+          <div class="radio-btn" onclick="selectRadio(this, '남녀공학')">남녀공학</div>
+          <div class="radio-btn" onclick="selectRadio(this, '남고/여고')">남고/여고</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>📚 즐겨하거나 자신 있는 과목 (다중 선택)</label>
+        <div class="chip-group">
+          <div class="chip" onclick="toggleChip(this)">수학</div>
+          <div class="chip" onclick="toggleChip(this)">과학</div>
+          <div class="chip" onclick="toggleChip(this)">영어</div>
+          <div class="chip" onclick="toggleChip(this)">국어</div>
+          <div class="chip" onclick="toggleChip(this)">사회/역사</div>
+          <div class="chip" onclick="toggleChip(this)">예체능</div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="showResults()">나에게 맞는 맞춤 고등학교 보기 🚀</button>
+    </div>
+
+    <!-- 2. 추천 결과 화면 -->
+    <div id="resultScreen" class="screen">
+      <button class="back-btn" onclick="showInput()">← 다시 선택하기</button>
+      <div class="main-title">추천 고등학교 목록 🏫</div>
+      <div id="schoolList"></div>
+    </div>
+  </div>
+
+  <script>
+    let selectedCoed = '상관없음';
+
+    // 라디오 버튼 선택 제어
+    function selectRadio(element, value) {
+      document.querySelectorAll('.radio-btn').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      selectedCoed = value;
+    }
+
+    // 칩 버튼 다중 선택 제어
+    function toggleChip(element) {
+      element.classList.toggle('active');
+    }
+
+    // 결과 화면 전환 및 추천 알고리즘 처리
+    function showResults() {
+      const region = document.getElementById('regionSelect').value;
+      
+      // 예시 추천 고등학교 데이터
+      const mockSchools = [
+        {
+          name: "한빛고등학교",
+          tag: "이과 성향 추천",
+          distance: "버스 15분 (약 2.1km)",
+          reason: "수학/과학 중점 교육과정을 운영하여 선택 과목과 매우 잘 맞습니다.",
+          pros: "최신 시설의 독서실, 자율동아리 지원금이 많음.",
+          cons: "매점이 없고 자판기만 있음, 서술형 평가 난이도가 높은 편.",
+          examStyle: "수학은 사고력 위주의 변형 문제 출제 비율이 높고, 영어는 부교재 비중이 70% 이상으로 높음."
+        },
+        {
+          name: "꿈마을고등학교",
+          tag: "통학 최우선",
+          distance: "도보 10분 (약 800m)",
+          reason: `${region} 기준 통학 거리가 매우 가깝고, 내신 따기가 상대적으로 수월함.`,
+          pros: "통학이 매우 편리함, 선생님들이 친절하고 수행평가 부담이 적음.",
+          cons: "상위권 경쟁이 치열하여 1등급 컷이 매우 높음.",
+          examStyle: "교과서 중심의 정직한 출제 스타일. 실수 하나로 등급이 갈릴 수 있어 꼼꼼함이 필수."
+        },
+        {
+          name: "성현여자고등학교",
+          tag: "문과/수시 강추",
+          distance: "지하철+도보 25분 (약 3.8km)",
+          reason: "국어/영어 과목에 강점이 있는 학생들에게 체계적인 생기부 관리를 제공.",
+          pros: "면학 분위기가 매우 좋음, 문과 계열 수시 실적이 우수함.",
+          cons: "내신 경쟁이 매우 치열함, 등교 길 경사가 가파름.",
+          examStyle: "국어와 영어의 지문이 길고 지필고사 변별력이 매우 높음. 융합형 문제 자주 출제."
+        }
+      ];
+
+      const schoolListContainer = document.getElementById('schoolList');
+      schoolListContainer.innerHTML = '';
+
+      // 동적 카드 생성
+      mockSchools.forEach(school => {
+        const cardHtml = `
+          <div class="school-card">
+            <div class="card-header">
+              <span class="school-name">${school.name}</span>
+              <span class="tag">${school.tag}</span>
+            </div>
+            <div class="distance">🚌 통학 거리: ${school.distance}</div>
+            <div class="divider"></div>
+            <div class="detail-item">
+              <div class="detail-title">🎯 추천 이유</div>
+              <div class="detail-content">${school.reason}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-title">👍 장점</div>
+              <div class="detail-content">${school.pros}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-title">👎 단점</div>
+              <div class="detail-content">${school.cons}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-title">📝 내신 출제 스타일</div>
+              <div class="detail-content">${school.examStyle}</div>
+            </div>
+          </div>
+        `;
+        schoolListContainer.innerHTML += cardHtml;
+      });
+
+      document.getElementById('inputScreen').classList.remove('active');
+      document.getElementById('resultScreen').classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    // 다시 선택하기 화면 전환
+    function showInput() {
+      document.getElementById('resultScreen').classList.remove('active');
+      document.getElementById('inputScreen').classList.add('active');
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>
